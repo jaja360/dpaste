@@ -18,7 +18,7 @@ AS_IF([test "x$enable_debug" = "xyes"],
 AC_PROG_CXX
 AC_PROG_RANLIB
 
-PKG_CHECK_MODULES([OpenDHT], [opendht >= 3.0.0])
+PKG_CHECK_MODULES([OpenDHT], [opendht >= 1.8.2])
 PKG_CHECK_MODULES([CURLPP], [curlpp])
 PKG_CHECK_MODULES([GLIBMM], [glibmm-2.4])
 
@@ -45,4 +45,3 @@ AM_COND_IF([DPASTE_TEST],
 AC_OUTPUT
 
 # vim: set ts=2 sw=2 tw=120 et :
-

@@ -21,10 +21,8 @@
 #include <algorithm>
 #include <random>
 #include <future>
-#include <cstdio>
 #include <cstdlib>
 #include <filesystem>
-#include <fstream>
 #include <iostream>
 
 #include <opendht.h>
@@ -39,7 +37,7 @@ const constexpr char* Node::DPASTE_USER_TYPE;
 namespace {
 
 /**
- * Directory holding the on-disk caches (identity + node state).
+ * Directory holding the on-disk OpenDHT node state.
  * Can be overridden with the DPASTE_CACHE_DIR environment variable
  * (e.g. for tests). Defaults to ${XDG_CACHE_HOME}/dpaste.
  */
@@ -53,51 +51,15 @@ std::string cacheDir() {
 
 } /* anonymous namespace */
 
-dht::crypto::Identity Node::loadIdentity() {
-    /* Only try the cache if the files exist: a missing cache is the normal
-     * first-run case and shouldn't print a scary error. */
-    std::ifstream key_file(identity_path_ + ".pem");
-    if (key_file.good()) {
-        try {
-            auto id = dht::crypto::loadIdentity(identity_path_);
-            if (id.first and id.second)
-                return id;
-        } catch (const std::exception& e) {
-            std::cerr << "dpaste: cached identity is corrupt (" << e.what() << "), generating a new one." << std::endl;
-        }
-    }
-
-    auto id = dht::crypto::generateIdentity();
-    try {
-        /* Write to temporary files first, then rename, so concurrent dpaste
-         * processes never leave a half-written identity in the cache. */
-        auto tmp_path = identity_path_ + ".tmp";
-        dht::crypto::saveIdentity(id, tmp_path);
-        std::rename((tmp_path + ".pem").c_str(), (identity_path_ + ".pem").c_str());
-        std::rename((tmp_path + ".crt").c_str(), (identity_path_ + ".crt").c_str());
-    } catch (const std::exception& e) {
-        std::cerr << "dpaste: failed to cache identity: " << e.what() << std::endl;
-    }
-    return id;
-}
-
 void Node::run(uint16_t port, std::string bootstrap_hostname, std::string bootstrap_port) {
     if (running_)
         return;
 
     auto dir = cacheDir();
-    identity_path_ = dir + "/identity";
-    nodes_path_ = dir + "/nodes";
-
-    /* Load (or generate and cache) the identity so we don't pay for RSA key
-     * generation on every run. */
-    auto identity = loadIdentity();
-
     /* Ask OpenDHT to load its state (routing table) on start and save it on
-     * shutdown; this turns the multi-second DHT cold start into a warm one. */
+     * shutdown; this reuses known peers and improves bootstrap resilience. */
     dht::DhtRunner::Config config;
-    config.dht_config.id = identity;
-    config.dht_config.node_config.persist_path = nodes_path_;
+    config.dht_config.node_config.persist_path = dir + "/nodes";
     config.threaded = true;
     node_.run(port, config);
 
