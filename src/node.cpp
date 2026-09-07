@@ -24,11 +24,13 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <optional>
 
 #include <opendht.h>
 #include <glibmm.h>
 
 #include "node.h"
+#include "log.h"
 
 namespace dpaste {
 
@@ -41,30 +43,37 @@ namespace {
  * Can be overridden with the DPASTE_CACHE_DIR environment variable
  * (e.g. for tests). Defaults to ${XDG_CACHE_HOME}/dpaste.
  */
-std::string cacheDir() {
+std::optional<std::filesystem::path> create_cache_dir() {
     const char* env = std::getenv("DPASTE_CACHE_DIR");
-    std::string dir = env and *env ? env : Glib::get_user_cache_dir() + "/dpaste";
+    const std::filesystem::path cache_dir = env and *env ? env : Glib::get_user_cache_dir() + "/dpaste";
     std::error_code ec;
-    std::filesystem::create_directories(dir, ec);
-    return dir;
+    std::filesystem::create_directories(cache_dir, ec);
+    if (ec) {
+        DPASTE_MSG("Failed to create cache directory '%s': %s", cache_dir.string().c_str(), ec.message().c_str());
+        return std::nullopt;
+    }
+    return cache_dir;
 }
 
 } /* anonymous namespace */
 
-void Node::run(uint16_t port, std::string bootstrap_hostname, std::string bootstrap_port) {
+bool Node::run(uint16_t port, std::string bootstrap_hostname, std::string bootstrap_port) {
     if (running_)
-        return;
+        return true;
 
-    auto dir = cacheDir();
+    const auto cache_dir = create_cache_dir();
+    if (not cache_dir)
+        return false;
     /* Ask OpenDHT to load its state (routing table) on start and save it on
      * shutdown; this reuses known peers and improves bootstrap resilience. */
     dht::DhtRunner::Config config;
-    config.dht_config.node_config.persist_path = dir + "/nodes";
+    config.dht_config.node_config.persist_path = (*cache_dir / "nodes").string();
     config.threaded = true;
     node_.run(port, config);
 
     node_.bootstrap(bootstrap_hostname, bootstrap_port);
     running_ = true;
+    return true;
 }
 
 bool Node::paste(const std::string& code, dht::Blob&& blob, dht::DoneCallbackSimple&& cb) {

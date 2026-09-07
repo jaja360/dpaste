@@ -69,7 +69,7 @@ public:
      * @param bootstrap_hostname Hostname of the bootstrap node.
      * @param bootstrap_port    Port of the bootstrap node.
      */
-    void run(uint16_t port = 0, std::string bootstrap_hostname = DEFAULT_BOOTSTRAP_NODE, std::string bootstrap_port = DEFAULT_BOOTSTRAP_PORT);
+    bool run(uint16_t port = 0, std::string bootstrap_hostname = DEFAULT_BOOTSTRAP_NODE, std::string bootstrap_port = DEFAULT_BOOTSTRAP_PORT);
 
     void stop() {
         std::condition_variable cv;
@@ -131,4 +131,3 @@ private:
 };
 
 } /* dpaste */
-

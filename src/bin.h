@@ -124,9 +124,9 @@ private:
     /* transport */
     std::unique_ptr<HttpClient> http_client_ {};
     Node node {};
+    bool node_ready_ {false};
 };
 
 } /* dpaste */
 
 /* vim:set et sw=4 ts=4 tw=120: */
-
