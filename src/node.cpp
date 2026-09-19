@@ -49,7 +49,7 @@ std::optional<std::filesystem::path> create_cache_dir() {
     std::error_code ec;
     std::filesystem::create_directories(cache_dir, ec);
     if (ec) {
-        DPASTE_MSG("Failed to create cache directory '%s': %s", cache_dir.string().c_str(), ec.message().c_str());
+        DPASTE_MSG("warning: could not create cache directory '%s': %s; the DHT state will not be persisted", cache_dir.string().c_str(), ec.message().c_str());
         return std::nullopt;
     }
     return cache_dir;
