@@ -75,12 +75,15 @@ public:
     }
 };
 
-TEST_CASE("Node refuses a cache path that is a regular file", "[Node][cache]") {
+TEST_CASE("Node starts even when the cache path is unusable", "[Node][cache]") {
     PirateNodeTester pt;
     CacheFileGuard cache;
 
     dpaste::Node node {};
-    REQUIRE_FALSE(node.run());
+    node.run();
+    REQUIRE(pt.is_running(node));
+
+    node.stop();
     REQUIRE_FALSE(pt.is_running(node));
 }
 
@@ -90,7 +93,7 @@ TEST_CASE("Node get/paste on DHT", "[Node][get][paste]") {
     const std::string PIN = random_pin();
     std::vector<uint8_t> data = {0, 1, 2, 3, 4};
     dpaste::Node node {};
-    REQUIRE(node.run());
+    node.run();
 
     SECTION ( "pasting data {0,1,2,3,4}" ) {
         REQUIRE ( node.paste(PIN, std::vector<uint8_t> {data}) );

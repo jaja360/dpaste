@@ -57,23 +57,20 @@ std::optional<std::filesystem::path> create_cache_dir() {
 
 } /* anonymous namespace */
 
-bool Node::run(uint16_t port, std::string bootstrap_hostname, std::string bootstrap_port) {
+void Node::run(uint16_t port, std::string bootstrap_hostname, std::string bootstrap_port) {
     if (running_)
-        return true;
+        return;
 
-    const auto cache_dir = create_cache_dir();
-    if (not cache_dir)
-        return false;
+    dht::DhtRunner::Config config;
     /* Ask OpenDHT to load its state (routing table) on start and save it on
      * shutdown; this reuses known peers and improves bootstrap resilience. */
-    dht::DhtRunner::Config config;
-    config.dht_config.node_config.persist_path = (*cache_dir / "nodes").string();
+    if (const auto cache_dir = create_cache_dir())
+        config.dht_config.node_config.persist_path = (*cache_dir / "nodes").string();
     config.threaded = true;
     node_.run(port, config);
 
     node_.bootstrap(bootstrap_hostname, bootstrap_port);
     running_ = true;
-    return true;
 }
 
 bool Node::paste(const std::string& code, dht::Blob&& blob, dht::DoneCallbackSimple&& cb) {

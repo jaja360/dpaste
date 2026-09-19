@@ -63,13 +63,15 @@ public:
 
     /**
      * Start the DHT node. Its routing state is cached on disk (see
-     * DPASTE_CACHE_DIR below) so subsequent runs can connect more quickly.
+     * DPASTE_CACHE_DIR below) so subsequent runs can connect more quickly. A
+     * cache directory that cannot be created is only reported; the node still
+     * starts, without persistence.
      *
      * @param port              Local port to bind (0 for random).
      * @param bootstrap_hostname Hostname of the bootstrap node.
      * @param bootstrap_port    Port of the bootstrap node.
      */
-    bool run(uint16_t port = 0, std::string bootstrap_hostname = DEFAULT_BOOTSTRAP_NODE, std::string bootstrap_port = DEFAULT_BOOTSTRAP_PORT);
+    void run(uint16_t port = 0, std::string bootstrap_hostname = DEFAULT_BOOTSTRAP_NODE, std::string bootstrap_port = DEFAULT_BOOTSTRAP_PORT);
 
     void stop() {
         std::condition_variable cv;

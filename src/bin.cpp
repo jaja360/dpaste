@@ -36,7 +36,9 @@ namespace dpaste {
 
 const constexpr uint8_t Bin::PROTO_VERSION;
 
-Bin::Bin() : node_ready_(node.run()) {
+Bin::Bin() {
+    node.run();
+
     /* load dpaste config */
     auto config_file = conf::ConfigurationFile();
     config_file.load();
@@ -68,15 +70,12 @@ std::pair<bool, std::string> Bin::get(std::string&& code, bool no_decrypt) {
     std::vector<uint8_t> data {data_str.begin(), data_str.end()};
 
     /* if fail, then perform request from local node */
-    if (data.empty() and node_ready_) {
+    if (data.empty()) {
         /* get a pasted blob */
         auto values = node.get(lcode);
         if (not values.empty())
             data = values.front();
     }
-
-    if (data.empty() and not node_ready_)
-        return {false, ""};
 
     if (not data.empty()) {
         Packet p;
@@ -184,7 +183,7 @@ std::string Bin::paste(std::vector<uint8_t>&& data, std::unique_ptr<crypto::Para
     DPASTE_MSG("Pasting data...");
     auto bin_packet = p.serialize();
     auto success = http_client_->put(code, {bin_packet.begin(), bin_packet.end()});
-    if (not success and node_ready_)
+    if (not success)
         success = node.paste(code, std::move(bin_packet));
 
     return success ? DPASTE_URI_PREFIX+code+pwd  : "";

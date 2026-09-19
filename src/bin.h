@@ -124,7 +124,6 @@ private:
     /* transport */
     std::unique_ptr<HttpClient> http_client_ {};
     Node node {};
-    bool node_ready_ {false};
 };
 
 } /* dpaste */
