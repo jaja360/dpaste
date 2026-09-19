@@ -37,8 +37,6 @@ namespace dpaste {
 const constexpr uint8_t Bin::PROTO_VERSION;
 
 Bin::Bin() {
-    node.run();
-
     /* load dpaste config */
     auto config_file = conf::ConfigurationFile();
     config_file.load();
@@ -50,6 +48,7 @@ Bin::Bin() {
         conv >> port;
     }
 
+    node.run();
     http_client_ = std::make_unique<HttpClient>(conf_.at("host"), port);
 }
 
@@ -226,3 +225,4 @@ void Bin::Packet::deserialize(const std::vector<uint8_t>& pbuffer) {
 } /* dpaste  */
 
 /* vim:set et sw=4 ts=4 tw=120: */
+
